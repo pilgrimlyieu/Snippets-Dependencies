@@ -119,7 +119,4 @@ def has_cjk(s):
     return cjk_re.search(s) is not None
 
 def choose_next(string, array, length = 0):
-    try:
-        return array[array.index(string) - (length or len(array)) + 1]
-    except:
-        return
+    return array[array.index(string) - (length or len(array)) + 1]

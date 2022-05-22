@@ -10,12 +10,31 @@ def command_cycle(target, commands, bracketnum = 1):
     string = list(target)
     depth = brackets = 0
     for i in range(len(string) - 1, -1, -1):
-        cut = string[i]
-        if cut == '}': depth += 1
-        elif cut == '{': depth -= 1
-        elif brackets == bracketnum and not depth and cut in command_map: string[i] = choose_next(cut, command_map, length)
+        if string[i] == '}': depth += 1
+        elif string[i] == '{': depth -= 1
+        elif brackets == bracketnum:
+            if not depth:
+                try:
+                    string[i] = choose_next(string[i], command_map, length)
+                    break
+                except:
+                    pass
         brackets += 0 if depth else 1
     result = ''.join(string)
     for i in range(length):
         result = result.replace(command_map[i], commands[i])
     return result
+
+def command_swap(target, command_1, command_2, bracketnum = 1):
+    string = list(target.replace(command_1, '🚀').replace(command_2, '🚁'))
+    depth = brackets = 0
+    for i in range(len(string) - 1, -1, -1):
+        if string[i] == '}': depth += 1
+        elif string[i] == '{': depth -= 1
+        elif brackets == bracketnum:
+            if not depth:
+                if string[i] == '🚀': string[i] = '🚁'
+                elif string[i] == '🚁': string[i] = '🚀'
+            break
+        brackets += 0 if depth else 1
+    return ''.join(string).replace('🚀', command_1).replace('🚁', command_2)
