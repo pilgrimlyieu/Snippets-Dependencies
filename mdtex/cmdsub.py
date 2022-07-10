@@ -96,11 +96,11 @@ if __name__ == '__main__':
         Cycle3  2.147127599997475
         Cycle4  2.230857400001696
         '''
-        print(test1.__doc__ + str(timeit.timeit(test1, number = repeat, globals = globals()))) 
-        print(test2.__doc__ + str(timeit.timeit(test2, number = repeat, globals = globals()))) 
-        print(test3.__doc__ + str(timeit.timeit(test3, number = repeat, globals = globals()))) 
-        print(test4.__doc__ + str(timeit.timeit(test4, number = repeat, globals = globals()))) 
-        print(test5.__doc__ + str(timeit.timeit(test5, number = repeat, globals = globals()))) 
+        print(test1.__doc__ + str(timeit.timeit(test1, number = repeat, globals = globals())))
+        print(test2.__doc__ + str(timeit.timeit(test2, number = repeat, globals = globals())))
+        print(test3.__doc__ + str(timeit.timeit(test3, number = repeat, globals = globals())))
+        print(test4.__doc__ + str(timeit.timeit(test4, number = repeat, globals = globals())))
+        print(test5.__doc__ + str(timeit.timeit(test5, number = repeat, globals = globals())))
 
     test(repeat)
 # }}}1
