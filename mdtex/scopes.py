@@ -10,11 +10,11 @@ def pure_math():
 
 # 行内公式模式 Inline Math Mode
 def inline_math():
-    return vim.eval("vimtex#syntax#in('texMathZoneX$')") == '1'
+    return vim.eval("vimtex#syntax#in('texMathZone[LT]I')") == '1'
 
 # 行间公式模式 Display Math Mode
 def display_math():
-    return vim.eval("vimtex#syntax#in('texMathZoneXX')") == '1'
+    return vim.eval("vimtex#syntax#in('texMathZone[LT]D')") == '1'
 
 # 化学模式 Chemistry Mode
 def chem():
