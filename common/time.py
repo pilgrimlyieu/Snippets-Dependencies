@@ -15,3 +15,12 @@ def get_modification_time(path):
     t_obj = time.strptime(m_ti)
     T_stamp = time.strftime("%Y-%m-%d %H:%M:%S", t_obj)
     return T_stamp
+
+def get_now_time():
+    import time
+    ti_m = time.time()
+    m_ti = time.ctime(ti_m)
+    t_obj = time.strptime(m_ti)
+    T_stamp = time.strftime("%Y-%m-%d %H:%M:%S", t_obj)
+    return T_stamp
+
