@@ -1,4 +1,3 @@
-import vim
 from unicodedata import east_asian_width
 
 def display_width(str):
