@@ -1,16 +1,123 @@
-from mdtex.scopes import display_math
+if __name__ != "__main__":
+    from mdtex.scopes import display_math
+else:
+    display_math = lambda: True
 import re
+from itertools import product
 
-default_row    = 3
-default_column = 3
+default_row_num = 3
+default_col_num = 3
 
-def generate_matrix(form, matrix, display):
+def matrix_template(form, matrix, display):
     space  = "\n" if display else " "
     indent = "  " if display else ""
     result = "\\begin{" + form + "matrix}" + space
     for row_vector in matrix[:-1]:
         result += indent + " & ".join(row_vector) + " \\\\" + space
     return result + indent + " & ".join(matrix[-1]) + space + "\\end{" + form + "matrix}"
+
+def debug(matrix, snip = None):
+    if __name__ == "__main__":
+        print(matrix_template('p', matrix, 1))
+    else:
+        snip.expand_anon(matrix_template('p', matrix, 1))
+
+rcn_replace    = lambda content, row, col, row_num: content.replace('\\r', str(row + 1)).replace('\\c', str(col + 1)).replace('\\n', str(row * row_num + col + 1))
+dynvar_replace = lambda content, row, col, row_num, dyn = 1: re.sub(r'`([\s\d+*/-]*)`', lambda m: str(eval(m.group(1))), rcn_replace(content, row, col, row_num)) if dyn else rcn_replace(content, row, col, row_num)
+placeholder    = lambda tabstop, content: (tabstop + 1, "${%d:%s" % (tabstop + 1, content) + "}")
+row_vec        = lambda matrix,  row: matrix[row - 1]
+col_vec        = lambda matrix,  col: [row[col - 1] for row in matrix]
+
+def generate_matrix(form, options, size, content, snip):
+    display = 1 if display_math() else 0
+    if options:
+        if   '0' in options: matrix_style = '0'
+        elif 'i' in options: matrix_style = 'i'
+        elif 'd' in options: matrix_style = 'd'
+        elif 'D' in options: matrix_style = 'D'
+        elif 't' in options: matrix_style = 't'
+        elif 'T' in options: matrix_style = 'T'
+        elif 'c' in options: matrix_style = 'c'
+        elif 's' in options: matrix_style = 's'
+        else               : matrix_style = ''
+    else: matrix_style = ''
+    fill_zero         = 0 if '-' in options else 1
+    auto_dots         = 1 if '.' in options else 0
+    tabstop_for_0_all = 1 if '1' in options else 0
+    tabstop_for_0_sep = 1 if '2' in options else 0
+    tabstop_in_style  = 0 if '3' in options else 1
+
+    empty_element = "0" if fill_zero else ""
+
+    if size:
+        if len(size) == 1: row_num= col_num = int(size)
+        elif len(size) == 2: row_num, col_num = int(size[0]), int(size[1])
+    else: row_num, col_num = default_row_num, default_col_num
+
+    matrix = [[empty_element for j in range(col_num)] for i in range(row_num)]
+
+    tabstop   = 0
+    if matrix_style == '0':
+        if tabstop_for_0_sep:
+            for i, j in product(range(row_num), range(col_num)):
+                tabstop, matrix[i][j] = placeholder(tabstop, matrix[i][j])
+        elif tabstop_for_0_all:
+            for i, j in product(range(row_num), range(col_num)):
+                _, matrix[i][j] = placeholder(0, matrix[i][j])
+        debug(matrix, snip)
+    elif row_num == col_num:
+        if matrix_style in 'id':
+            for i, j in product(range(row_num), range(col_num)):
+                if i == j:
+                    matrix[i][j] = dynvar_replace(content, i, j, col_num)
+                    if matrix_style == 'i' and not content:
+                        tabstop, matrix[i][j] = placeholder(0, matrix[i][j])
+                    elif matrix_style == 'd' and tabstop_in_style:
+                        tabstop, matrix[i][j] = placeholder(tabstop, matrix[i][j])
+                elif tabstop_for_0_sep:
+                    tabstop, matrix[i][j] = placeholder(tabstop, matrix[i][j])
+                elif tabstop_for_0_all:
+                    _, matrix[i][j] = placeholder(row_num if tabstop_in_style else 0, matrix[i][j])
+            debug(matrix, snip)
+        elif matrix_style == 'D':
+            for i, j in product(range(row_num), range(col_num)):
+                if i == row_num - 1 - j:
+                    matrix[i][j] = dynvar_replace(content, i, j, col_num)
+                    if matrix_style == 'i' and not content:
+                        tabstop, matrix[i][j] = placeholder(0, matrix[i][j])
+                    elif matrix_style == 'd' and tabstop_in_style:
+                        tabstop, matrix[i][j] = placeholder(tabstop, matrix[i][j])
+                elif tabstop_for_0_sep:
+                    tabstop, matrix[i][j] = placeholder(tabstop, matrix[i][j])
+                elif tabstop_for_0_all:
+                    _, matrix[i][j] = placeholder(row_num if tabstop_in_style else 0, matrix[i][j])
+            debug(matrix, snip)
+        elif matrix_style == 't':
+            for i, j in product(range(row_num), range(col_num)):
+                if i <= j:
+                    matrix[i][j] = dynvar_replace(content, i, j, col_num)
+                    if tabstop_in_style or not content:
+                        tabstop, matrix[i][j] = placeholder(tabstop, matrix[i][j])
+                elif tabstop_for_0_sep:
+                    tabstop, matrix[i][j] = placeholder(tabstop, matrix[i][j])
+            debug(matrix, snip)
+        elif matrix_style == 'T':
+            for i, j in product(range(row_num), range(col_num)):
+                if i >= j:
+                    matrix[i][j] = dynvar_replace(content, i, j, col_num)
+                    if tabstop_in_style or not content:
+                        tabstop, matrix[i][j] = placeholder(tabstop, matrix[i][j])
+                elif tabstop_for_0_sep:
+                    tabstop, matrix[i][j] = placeholder(tabstop, matrix[i][j])
+            debug(matrix, snip)
+        elif matrix_style == 'c': # 常对角矩阵，对角线使用相同 tabstop
+            for i in range(row_num):
+                
+
+if __name__ == "__main__":
+    # print(matrix_template("b", [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]], True))
+    # print(matrix_template(jj"b", [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]], False))
+    generate_matrix("b", "i2", "4", "a", None)
 
 # Adapted from https://github.com/sillybun/zyt-snippet
 def generate_matrix_element(i, j, row, column, virtual_row, virtual_column, ht, vt):
@@ -300,7 +407,3 @@ snip.rv = generate_matrix_element(%d, %d, %d, %d, '%c', '%c', [%s], [%s])
             displayed += display
     displayed += " " * len(linfo) + "\\end{%cmatrix}$0" % prefix + (" " + re.sub(r"\\", r"\\\\", rinfo) if rinfo else "")
     snip.expand_anon(displayed)
-
-if __name__ == "__main__":
-    print(generate_matrix("b", [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]], True))
-    print(generate_matrix("b", [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]], False))
