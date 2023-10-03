@@ -43,6 +43,7 @@ def generate_matrix(form, options, size, content, snip):
         elif 't' in options: matrix_style = 't'
         elif 'T' in options: matrix_style = 'T'
         elif 'c' in options: matrix_style = 'c'
+        elif 'C' in options: matrix_style = 'C'
         elif 's' in options: matrix_style = 's'
     fill_zero         = 0 if '-' in options else 1
     auto_dots         = 1 if '.' in options else 0
@@ -63,8 +64,8 @@ def generate_matrix(form, options, size, content, snip):
     if matrix_style == '':
         if tabstop_in_style:
             for i, j in product(range(row_num), range(col_num)):
-                tabstop_matrix[i][j] = tabstop
                 placeholders.append((i, j, dynvar_replace(content, (i, j), col_num)))
+                matrix[i][j] = add_tabstop(tabstop, (i, j), placeholders)
                 tabstop += 1
         else:
             for i, j in product(range(row_num), range(col_num)):
@@ -75,7 +76,6 @@ def generate_matrix(form, options, size, content, snip):
                 if tabstop_in_style:
                     placeholders.append((0, 0, dynvar_replace(content, (0, 0), col_num)))
                     for i in range(row_num):
-                        tabstop_matrix[i][i] = tabstop
                         matrix[i][i] = add_tabstop(tabstop, (i, i), placeholders)
                     tabstop += 1
                 else:
@@ -85,7 +85,6 @@ def generate_matrix(form, options, size, content, snip):
                 if tabstop_in_style:
                     for i in range(row_num):
                         placeholders.append((i, i, dynvar_replace(content, (i, i), col_num)))
-                        tabstop_matrix[i][i] = tabstop
                         matrix[i][i] = add_tabstop(tabstop, (i, i), placeholders)
                         tabstop += 1
                 else:
@@ -95,7 +94,6 @@ def generate_matrix(form, options, size, content, snip):
                 if tabstop_in_style:
                     for i in range(row_num):
                         placeholders.append((i, row_num - 1 - i, dynvar_replace(content, (i, row_num - 1 - i), col_num)))
-                        tabstop_matrix[i][row_num - 1 - i] = tabstop
                         matrix[i][row_num - 1 - i] = add_tabstop(tabstop, (i, row_num - 1 - i), placeholders)
                         tabstop += 1
                 else:
@@ -106,7 +104,6 @@ def generate_matrix(form, options, size, content, snip):
                     for i, j in product(range(row_num), range(col_num)):
                         if i <= j:
                             placeholders.append((i, j, dynvar_replace(content, (i, j), col_num)))
-                            tabstop_matrix[i][j] = tabstop
                             matrix[i][j] = add_tabstop(tabstop, (i, j), placeholders)
                             tabstop += 1
                 else:
@@ -118,7 +115,6 @@ def generate_matrix(form, options, size, content, snip):
                     for i, j in product(range(row_num), range(col_num)):
                         if i >= j:
                             placeholders.append((i, j, dynvar_replace(content, (i, j), col_num)))
-                            tabstop_matrix[i][j] = tabstop
                             matrix[i][j] = add_tabstop(tabstop, (i, j), placeholders)
                             tabstop += 1
                 else:
@@ -126,8 +122,56 @@ def generate_matrix(form, options, size, content, snip):
                         if i >= j:
                             matrix[i][j] = dynvar_replace(content, (i, j), col_num)
             case 'c':
-                for i in range(row_num):
-                    pass
+                if tabstop_in_style:
+                    for j in range(col_num):
+                        placeholders.append((0, j, dynvar_replace(content, (0, j), col_num)))
+                        for k in range(j, row_num):
+                            matrix[k - j][k] = add_tabstop(tabstop, (k - j, k), placeholders)
+                        tabstop += 1
+                    for i in range(1, row_num):
+                        placeholders.append((i, 0, dynvar_replace(content, (i, 0), col_num)))
+                        for k in range(i, col_num):
+                            matrix[k][k - i] = add_tabstop(tabstop, (k, k - i), placeholders)
+                        tabstop += 1
+                else:
+                    for j in range(col_num):
+                        for k in range(j, row_num):
+                            matrix[k - j][k] = dynvar_replace(content, (0, j), col_num)
+                    for i in range(1, row_num):
+                        for k in range(i, col_num):
+                            matrix[k][k - i] = dynvar_replace(content, (i, 0), col_num)
+            case 'C':
+                if tabstop_in_style:
+                    for j in range(col_num - 1, -1, -1):
+                        placeholders.append((0, j, dynvar_replace(content, (0, j), col_num)))
+                        for k in range(j, -1, -1):
+                            matrix[j - k][k] = add_tabstop(tabstop, (j - k, k), placeholders)
+                        tabstop += 1
+                    for i in range(1, row_num):
+                        placeholders.append((i, col_num - 1, dynvar_replace(content, (i, col_num - 1), col_num)))
+                        for k in range(i, row_num):
+                            matrix[k][col_num - 1 + i - k] = add_tabstop(tabstop, (k, col_num - 1 + i - k), placeholders)
+                        tabstop += 1
+                else:
+                    for j in range(col_num - 1, -1, -1):
+                        for k in range(j, -1, -1):
+                            matrix[j - k][k] = dynvar_replace(content, (0, j), col_num)
+                    for i in range(1, row_num):
+                        for k in range(i, row_num):
+                            matrix[k][col_num - 1 + i - k] = dynvar_replace(content, (i, col_num - 1), col_num)
+            case 's':
+                if tabstop_in_style:
+                    for i, j in product(range(row_num), range(col_num)):
+                        if i <= j:
+                            placeholders.append((i, j, dynvar_replace(content, (i, j), col_num)))
+                            matrix[i][j] = add_tabstop(tabstop, (i, j), placeholders)
+                            matrix[j][i] = matrix[i][j]
+                            tabstop += 1
+                else:
+                    for i, j in product(range(row_num), range(col_num)):
+                        if i <= j:
+                            matrix[i][j] = dynvar_replace(content, (i, j), col_num)
+                            matrix[j][i] = matrix[i][j]
     if tabstop_for_0_sep:
         for i, j in product(range(row_num), range(col_num)):
             if matrix[i][j] == empty_element:
@@ -147,8 +191,8 @@ def generate_matrix(form, options, size, content, snip):
 if __name__ == "__main__":
     # print(matrix_template("b", [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]], True))
     # print(matrix_template("b", [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]], False))
-    generate_matrix("b", "T", "4", "a_{\\r\\c}", None)
-    generate_matrix("b", "T3", "4", "a", None)
+    generate_matrix("b", "s", "4", "(\\r \\c)", None)
+    # generate_matrix("b", "3", "4", "\\r\\c", None)
 
 # Adapted from https://github.com/sillybun/zyt-snippet
 def generate_matrix_element(i, j, row, column, virtual_row, virtual_column, ht, vt):
