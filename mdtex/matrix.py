@@ -52,12 +52,12 @@ def generate_matrix(form, options, size, content, snip):
         elif 'C' in options: matrix_style = 'C'
         elif 's' in options: matrix_style = 's'
     # auto_dotes = not default_auto_dots if '.' in options else default_auto_dots
-    fill_zero         = not default_fill_zero if '-' in options else default_fill_zero
+    fill_zero         = not default_fill_zero         if '-' in options else default_fill_zero
     tabstop_for_0_all = not default_tabstop_for_0_all if '1' in options else default_tabstop_for_0_all
     tabstop_for_0_sep = not default_tabstop_for_0_sep if '2' in options else default_tabstop_for_0_sep
-    tabstop_in_style  = not default_tabstop_in_style if '3' in options else default_tabstop_in_style
+    tabstop_in_style  = not default_tabstop_in_style  if '3' in options else default_tabstop_in_style
 
-    empty_element = "0" if fill_zero else ""
+    empty_element = "0" if fill_zero else " "
     if   len(size) == 1: row_num = col_num = int(size)
     elif len(size) == 2: row_num,  col_num = int(size[0]), int(size[1])
     else:                row_num,  col_num = default_row_num, default_col_num
