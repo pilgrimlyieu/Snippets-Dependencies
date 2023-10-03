@@ -197,17 +197,17 @@ def generate_matrix(form, options, size, content, snip):
                             matrix[j][i] = add_tabstop(tabstop, (j, i), placeholders)
     if tabstop_for_0_sep:
         for i, j in product(range(row_num), range(col_num)):
-            if matrix[i][j] == empty_element:
+            if matrix[i][j] == empty_element or matrix[i][j].isspace():
                 placeholders.append((i, j, empty_element))
                 matrix[i][j] = add_tabstop(tabstop, (i, j), placeholders)
                 tabstop += 1
     elif tabstop_for_0_all:
         have_0 = 0
         for i, j in product(range(row_num), range(col_num)):
-            if not have_0 and matrix[i][j] == empty_element:
+            if not have_0 and (matrix[i][j] == empty_element or matrix[i][j].isspace()):
                 placeholders.append((i, j, empty_element))
                 have_0 = 1
-            if matrix[i][j] == empty_element:
+            if matrix[i][j] == empty_element or matrix[i][j].isspace():
                 matrix[i][j] = add_tabstop(tabstop, (i, j), placeholders)
     debug("" if form == "m" else form, matrix, snip, display)
 
