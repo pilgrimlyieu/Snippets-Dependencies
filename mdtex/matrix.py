@@ -26,9 +26,9 @@ def rcn_replace(content, row, col, row_num):
     return content.replace('\\r', str(row + 1)).replace('\\c', str(col + 1)).replace('\\n', str(row * row_num + col + 1))
 def dynvar_replace(content, coordinate, row_num):
     return re.sub(r'`([\s\d+*/-]*)`', lambda m: str(eval(m.group(1))), rcn_replace(content, *coordinate, row_num)).replace("}", "\\}")
-def add_tabstop(tabstop, coordinate, placeholders, default = ""):
+def add_tabstop(tabstop, coordinate, placeholders):
     content = placeholders[tabstop][2]
-    return "${%d:%s" % (tabstop, content) + "}" if (coordinate == placeholders[tabstop][0:2] and content) else "$%d" % tabstop if tabstop else default
+    return "${%d:%s" % (tabstop, content) + "}" if (coordinate == placeholders[tabstop][0:2] and content) else "$%d" % tabstop if tabstop else content
 row_vec = lambda matrix,  row: matrix[row - 1]
 col_vec = lambda matrix,  col: [row[col - 1] for row in matrix]
 
@@ -57,28 +57,18 @@ def generate_matrix(form, options, size, content, snip):
     else:                row_num,  col_num = default_row_num, default_col_num
     matrix = [[empty_element for j in range(col_num)] for i in range(row_num)]
 
-    placeholders = [(-1, -1, '')]
+    placeholders = [(-1, -1, "")]
     tabstop_matrix = [[0 for j in range(col_num)] for i in range(row_num)]
     tabstop = 1
     if matrix_style == '':
-        for i, j in product(range(row_num), range(col_num)):
-            if tabstop_in_style:
+        if tabstop_in_style:
+            for i, j in product(range(row_num), range(col_num)):
                 tabstop_matrix[i][j] = tabstop
                 placeholders.append((i, j, dynvar_replace(content, (i, j), col_num)))
                 tabstop += 1
-            matrix[i][j] = add_tabstop(tabstop_matrix[i][j], (i, j), placeholders, dynvar_replace(content, (i, j), col_num))
-    elif matrix_style == '0':
-        if tabstop_for_0_sep:
+        else:
             for i, j in product(range(row_num), range(col_num)):
-                tabstop_matrix[i][j] = tabstop
-                placeholders.append((i, j, empty_element))
-                matrix[i][j] = add_tabstop(tabstop, (i, j), placeholders)
-                tabstop += 1
-        elif tabstop_for_0_all:
-            placeholders.append((0, 0, empty_element))
-            for i, j in product(range(row_num), range(col_num)):
-                tabstop_matrix[i][j] = tabstop
-                matrix[i][j] = add_tabstop(tabstop, (i, j), placeholders)
+                matrix[i][j] = dynvar_replace(content, (i, j), col_num)
     elif row_num == col_num:
         match matrix_style:
             case 'i':
@@ -91,57 +81,74 @@ def generate_matrix(form, options, size, content, snip):
                 else:
                     for i in range(row_num):
                         matrix[i][i] = dynvar_replace(content, (0, 0), col_num)
-                if tabstop_for_0_sep:
-                    for i, j in product(range(row_num), range(col_num)):
-                        if matrix[i][j] == empty_element:
-                            tabstop_matrix[i][j] = tabstop
-                            placeholders.append((i, j, empty_element))
-                            tabstop += 1
-                            matrix[i][j] = add_tabstop(tabstop_matrix[i][j], (i, j), placeholders)
-                elif tabstop_for_0_all:
-                    placeholders.append((0, 1, empty_element))
-                    for i, j in product(range(row_num), range(col_num)):
-                        if matrix[i][j] == empty_element:
-                            tabstop_matrix[i][j] = tabstop
-                            matrix[i][j] = add_tabstop(tabstop_matrix[i][j], (i, j), placeholders)
             case 'd':
-                pass
+                if tabstop_in_style:
+                    for i in range(row_num):
+                        placeholders.append((i, i, dynvar_replace(content, (i, i), col_num)))
+                        tabstop_matrix[i][i] = tabstop
+                        matrix[i][i] = add_tabstop(tabstop, (i, i), placeholders)
+                        tabstop += 1
+                else:
+                    for i in range(row_num):
+                        matrix[i][i] = dynvar_replace(content, (i, i), col_num)
             case 'D':
-                for i, j in product(range(row_num), range(col_num)):
-                    if i == row_num - 1 - j:
-                        matrix[i][j] = dynvar_replace(content, (i, j), col_num)
-                        if tabstop_in_style:
-                            tabstop, matrix[i][j] = add_tabstop(tabstop, matrix[i][j])
-                    elif tabstop_for_0_sep:
-                        tabstop, matrix[i][j] = add_tabstop(tabstop, matrix[i][j])
-                    elif tabstop_for_0_all:
-                        _, matrix[i][j] = add_tabstop(row_num if tabstop_in_style else 0, matrix[i][j])
+                if tabstop_in_style:
+                    for i in range(row_num):
+                        placeholders.append((i, row_num - 1 - i, dynvar_replace(content, (i, row_num - 1 - i), col_num)))
+                        tabstop_matrix[i][row_num - 1 - i] = tabstop
+                        matrix[i][row_num - 1 - i] = add_tabstop(tabstop, (i, row_num - 1 - i), placeholders)
+                        tabstop += 1
+                else:
+                    for i in range(row_num):
+                        matrix[i][row_num - 1 - i] = dynvar_replace(content, (i, row_num - 1 - i), col_num)
             case 't':
-                for i, j in product(range(row_num), range(col_num)):
-                    if i <= j:
-                        matrix[i][j] = dynvar_replace(content, (i, j), col_num)
-                        if tabstop_in_style or not content:
-                            tabstop, matrix[i][j] = add_tabstop(tabstop, matrix[i][j])
-                    elif tabstop_for_0_sep:
-                        tabstop, matrix[i][j] = add_tabstop(tabstop, matrix[i][j])
+                if tabstop_in_style:
+                    for i, j in product(range(row_num), range(col_num)):
+                        if i <= j:
+                            placeholders.append((i, j, dynvar_replace(content, (i, j), col_num)))
+                            tabstop_matrix[i][j] = tabstop
+                            matrix[i][j] = add_tabstop(tabstop, (i, j), placeholders)
+                            tabstop += 1
+                else:
+                    for i, j in product(range(row_num), range(col_num)):
+                        if i <= j:
+                            matrix[i][j] = dynvar_replace(content, (i, j), col_num)
             case 'T':
-                for i, j in product(range(row_num), range(col_num)):
-                    if i >= j:
-                        matrix[i][j] = dynvar_replace(content, (i, j), col_num)
-                        if tabstop_in_style or not content:
-                            tabstop, matrix[i][j] = add_tabstop(tabstop, matrix[i][j])
-                    elif tabstop_for_0_sep:
-                        tabstop, matrix[i][j] = add_tabstop(tabstop, matrix[i][j])
+                if tabstop_in_style:
+                    for i, j in product(range(row_num), range(col_num)):
+                        if i >= j:
+                            placeholders.append((i, j, dynvar_replace(content, (i, j), col_num)))
+                            tabstop_matrix[i][j] = tabstop
+                            matrix[i][j] = add_tabstop(tabstop, (i, j), placeholders)
+                            tabstop += 1
+                else:
+                    for i, j in product(range(row_num), range(col_num)):
+                        if i >= j:
+                            matrix[i][j] = dynvar_replace(content, (i, j), col_num)
             case 'c':
                 for i in range(row_num):
                     pass
+    if tabstop_for_0_sep:
+        for i, j in product(range(row_num), range(col_num)):
+            if matrix[i][j] == empty_element:
+                placeholders.append((i, j, empty_element))
+                matrix[i][j] = add_tabstop(tabstop, (i, j), placeholders)
+                tabstop += 1
+    elif tabstop_for_0_all:
+        have_0 = 0
+        for i, j in product(range(row_num), range(col_num)):
+            if not have_0 and matrix[i][j] == empty_element:
+                placeholders.append((i, j, empty_element))
+                have_0 = 1
+            if matrix[i][j] == empty_element:
+                matrix[i][j] = add_tabstop(tabstop, (i, j), placeholders)
     debug(matrix, snip, display)
 
 if __name__ == "__main__":
     # print(matrix_template("b", [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]], True))
     # print(matrix_template("b", [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]], False))
-    generate_matrix("b", "i13", "4", "a_{\\r\\c}", None)
-    generate_matrix("b", "i3", "4", "a", None)
+    generate_matrix("b", "T", "4", "a_{\\r\\c}", None)
+    generate_matrix("b", "T3", "4", "a", None)
 
 # Adapted from https://github.com/sillybun/zyt-snippet
 def generate_matrix_element(i, j, row, column, virtual_row, virtual_column, ht, vt):
