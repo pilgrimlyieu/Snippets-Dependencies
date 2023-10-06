@@ -4,6 +4,7 @@ else:
     from mdtex.scopes import display_math
 import re
 from itertools import product
+from math import *
 
 default_row_num = 3
 default_col_num = 3
@@ -28,9 +29,10 @@ def debug(form, matrix, snip, display):
         snip.expand_anon(matrix_template(form, matrix, display).replace("\\", "\\\\"))
 
 def rcn_replace(content, row, col, row_num):
-    return content.replace('\\r', str(row + 1)).replace('\\c', str(col + 1)).replace('\\n', str(row * row_num + col + 1))
+    return re.sub(r"\\r(?![a-zA-Z])", str(row + 1), re.sub(r"\\c(?![a-zA-Z])", str(col + 1), re.sub(r"\\n(?![a-zA-Z])", str(row * row_num + col + 1), content)))
 def dynvar_replace(content, coordinate, row_num):
-    return re.sub(r'`([\s\d+*/-]*)`', lambda m: str(eval(m.group(1))), rcn_replace(content, *coordinate, row_num)).replace("}", "\\}")
+    return re.sub(r'(?<!\\)`([()[\]\'",%.\w\s=+*/-]*)`', lambda m: str(eval(m.group(1))), rcn_replace(content, *coordinate, row_num))
+    # return re.sub(r'`([\s\d+*/-]*)`', lambda m: str(eval(m.group(1))), rcn_replace(content, *coordinate, row_num)).replace("}", "\\}")
 def add_tabstop(tabstop, coordinate, placeholders):
     content = placeholders[tabstop][2]
     return "${%d:%s" % (tabstop, content) + "}" if (coordinate == placeholders[tabstop][0:2] and content) else "$%d" % tabstop if tabstop else content
