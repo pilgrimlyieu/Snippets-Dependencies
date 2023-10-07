@@ -44,7 +44,7 @@ def generate_matrix(form, options, size, content, snip):
     display = 1 if display_math() else 0
     matrix_style = ''
     if options:
-        if   '0' in options: matrix_style = '0'
+        if   'O' in options: matrix_style = 'O'
         elif 'i' in options: matrix_style = 'i'
         elif 'd' in options: matrix_style = 'd'
         elif 'D' in options: matrix_style = 'D'
@@ -54,10 +54,10 @@ def generate_matrix(form, options, size, content, snip):
         elif 'C' in options: matrix_style = 'C'
         elif 's' in options: matrix_style = 's'
     # auto_dotes = not default_auto_dots if '.' in options else default_auto_dots
-    fill_zero         = not default_fill_zero         if '-' in options else default_fill_zero
-    tabstop_for_0_all = not default_tabstop_for_0_all if '1' in options else default_tabstop_for_0_all
-    tabstop_for_0_sep = not default_tabstop_for_0_sep if '2' in options else default_tabstop_for_0_sep
-    tabstop_in_style  = not default_tabstop_in_style  if '3' in options else default_tabstop_in_style
+    fill_zero         = not default_fill_zero         if 'o' in options else default_fill_zero
+    tabstop_for_0_all = not default_tabstop_for_0_all if 'p' in options else default_tabstop_for_0_all
+    tabstop_for_0_sep = not default_tabstop_for_0_sep if 'P' in options else default_tabstop_for_0_sep
+    tabstop_in_style  = not default_tabstop_in_style  if 'y' in options else default_tabstop_in_style
 
     empty_element = "0" if fill_zero else " "
     if   len(size) == 1: row_num = col_num = int(size)
