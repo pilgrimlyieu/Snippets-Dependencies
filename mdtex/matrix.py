@@ -31,7 +31,7 @@ def debug(form, matrix, snip, display):
 def rcn_replace(content, row, col, row_num):
     return re.sub(r"\\r(?![a-zA-Z])", str(row + 1), re.sub(r"\\c(?![a-zA-Z])", str(col + 1), re.sub(r"\\n(?![a-zA-Z])", str(row * row_num + col + 1), content)))
 def dynvar_replace(content, coordinate, row_num):
-    return re.sub(r'(?<!\\)`([()[\]\'",%.\w\s=+*/-]*)`', lambda m: str(eval(m.group(1))), rcn_replace(content, *coordinate, row_num))
+    return re.sub(r'(?<!\\)`(.*?)(?<!\\)`', lambda m: str(eval(m.group(1))), rcn_replace(content, *coordinate, row_num)).replace('\\`', '`')
     # return re.sub(r'`([\s\d+*/-]*)`', lambda m: str(eval(m.group(1))), rcn_replace(content, *coordinate, row_num)).replace("}", "\\}")
 def add_tabstop(tabstop, coordinate, placeholders):
     content = placeholders[tabstop][2]
@@ -216,7 +216,7 @@ def generate_matrix(form, options, size, content, snip):
 if __name__ == "__main__":
     # print(matrix_template("b", [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]], True))
     # print(matrix_template("b", [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]], False))
-    generate_matrix("m", "s", "", "a", None)
+    generate_matrix("m", "s", "1", "a_{`\"%d\" % (3 if \\c == 1 else (\\c - 1))`}^{`str([3, 2, 1][\\r - 1])`} \\right", None)
 
 # Adapted from https://github.com/sillybun/zyt-snippet
 def generate_matrix_element(i, j, row, column, virtual_row, virtual_column, ht, vt):
