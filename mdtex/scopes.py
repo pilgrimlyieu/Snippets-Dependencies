@@ -1,12 +1,20 @@
 import vim
 
+external_environments = ['sympy', 'wolfram']
+
 # 数学模式 Math Mode
 def math():
-    return vim.eval('vimtex#syntax#in_mathzone()') == '1'
+    return vim.eval('vimtex#syntax#in_mathzone()') == '1' and not extcal()
 
 # 纯数学模式 Pure Math Mode
 def pure_math():
     return math() and not_chem() and not_unit()
+
+def extcal():
+    for environment in external_environments:
+        if env(environment):
+            return True
+    return False
 
 # 行内公式模式 Inline Math Mode
 def inline_math():
