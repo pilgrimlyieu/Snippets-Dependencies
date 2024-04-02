@@ -20,19 +20,27 @@ def process_latex(text):
     return sub(r'(\s|\W?)e(?=\W)', r'\g<1>\\e', text) \
                .replace(r'\, d', r'\d ')
 
-def get_block(form, snip):
+def get_environment(env, snip):
     if display_math():
-        status = 0
+        stack = -1
         for index, line in enumerate(snip.buffer[:snip.line]):
-            if line == form:
-                status = not status
-                if status:
+            if '\\begin{{{}}}'.format(env) == line.strip():
+                stack += 1
+                if stack == 0:
                     start = index
-        if status:
+            elif '\\end{{{}}}'.format(env) == line.strip():
+                stack -= 1
+                if stack == 0:
+                    start = index
+        if stack == 0:
             return (start, '\n'.join(snip.buffer[start + 1:snip.line]))
 
-def calculate_sympy(snip, from_latex = False):
-    index, block = get_block('sympy', snip)
+def calculate_sympy(snip, from_latex=False):
+    environment = get_environment('sympy', snip)
+    if environment:
+        index, block = environment
+    else:
+        return
     snip.buffer[index:snip.line + 1] = ['']
     pre_define = '''
 from sympy import *
@@ -46,10 +54,13 @@ f, g, h = symbols('f g h', cls = Function)
     snip.cursor.set(index, len(result))
     snip.buffer[index] = result
 
-def calculate_wolfram(snip, from_latex = False, timeout = wolframscript_timeout_default):
-    index, block = get_block('\\wolfram' if from_latex else 'wolfram', snip)
+def calculate_wolfram(snip, from_latex=False, timeout=wolframscript_timeout_default):
+    environment = get_environment('latex_wolfram' if from_latex else 'wolfram', snip)
+    if environment:
+        index, block = environment
+    else:
+        return
     snip.buffer[index:snip.line + 1] = ['']
-    wolfram_result = {}
     if from_latex:
         code = 'ToString[ToExpression["' + pre_process_latex(block) + '", TeXForm], TeXForm]'
     else:
@@ -57,7 +68,7 @@ def calculate_wolfram(snip, from_latex = False, timeout = wolframscript_timeout_
     try:
         result = check_output(['wolframscript', '-code', code], \
                               encoding = 'utf-8', \
-                              creationflags = 0x08000000,\
+                              # creationflags = 0x08000000,\ # Windows only
                               timeout  = int(timeout or wolframscript_timeout_default)).strip()
     except TimeoutExpired:
         result = ''
