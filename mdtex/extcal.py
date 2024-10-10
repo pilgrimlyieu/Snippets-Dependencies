@@ -2,6 +2,7 @@ from mdtex.scopes import display_math
 from sympy import latex
 from re import sub
 from subprocess import check_output, TimeoutExpired
+import os
 
 wolframscript_timeout_default = 10
 
@@ -65,13 +66,16 @@ def calculate_wolfram(snip, from_latex=False, timeout=wolframscript_timeout_defa
         code = 'ToString[ToExpression["' + pre_process_latex(block) + '", TeXForm], TeXForm]'
     else:
         code = 'ToString[' + block.replace('\n', ';') + ', TeXForm]'
+    kwargs = {
+        'encoding': 'utf-8',
+        'timeout': int(timeout)
+    }
+    if os.name == 'nt':  # Windows
+        kwargs['creationflags'] = 0x08000000
     try:
-        result = check_output(['wolframscript', '-code', code], \
-                              encoding = 'utf-8', \
-                              # creationflags = 0x08000000,\ # Windows only
-                              timeout  = int(timeout or wolframscript_timeout_default)).strip()
+        result = check_output(['wolframscript', '-code', code], **kwargs).strip()
     except TimeoutExpired:
         result = ''
     result = process_latex(result)
     snip.cursor.set(index, len(result))
-    snip.buffer[index] = result
+    snip.buffer[index] = result.replace("\n", " ") # Quick fix
