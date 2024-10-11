@@ -68,7 +68,7 @@ def calculate_wolfram(snip, from_latex=False, timeout=wolframscript_timeout_defa
         code = 'ToString[' + block.replace('\n', ';') + ', TeXForm]'
     kwargs = {
         'encoding': 'utf-8',
-        'timeout': int(timeout)
+        'timeout': int(timeout or wolframscript_timeout_default)
     }
     if os.name == 'nt':  # Windows
         kwargs['creationflags'] = 0x08000000
