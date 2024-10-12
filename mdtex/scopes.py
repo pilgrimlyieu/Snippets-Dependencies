@@ -6,7 +6,8 @@ external_environments = ['sympy', 'wolfram']
 def math():
     except_conditions = [
         extcal(),
-        # roman()
+        # roman(),
+        lambda: not cmd("textcolor")
     ]
     return all([
         vim.eval('vimtex#syntax#in_mathzone()') == '1',
@@ -66,7 +67,11 @@ def text() -> bool:
 def comment() -> bool: 
     return vim.eval('vimtex#syntax#in_comment()') == '1'
 
-# 特殊环境 Specific Environment
+# 特殊命令 Specific Commands
+def cmd(name) -> bool:
+    return vim.eval("get(vimtex#cmd#get_current(), 'name')") == name
+
+# 特殊环境 Specific Environments
 def env(name) -> bool:
     [x, y] = vim.eval("vimtex#env#is_inside('" + name + "')") 
     return x != '0' and y != '0'
