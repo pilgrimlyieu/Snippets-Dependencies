@@ -7,7 +7,7 @@ def math():
     except_conditions = [
         extcal(),
         # roman(),
-        lambda: not cmd("textcolor")
+        cmd("textcolor")
     ]
     return all([
         vim.eval('vimtex#syntax#in_mathzone()') == '1',
@@ -69,7 +69,7 @@ def comment() -> bool:
 
 # 特殊命令 Specific Commands
 def cmd(name) -> bool:
-    return vim.eval("get(vimtex#cmd#get_current(), 'name')") == name
+    return vim.eval("get(vimtex#cmd#get_current(), 'name')") == f'\\{name}'
 
 # 特殊环境 Specific Environments
 def env(name) -> bool:
