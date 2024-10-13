@@ -7,7 +7,8 @@ def math():
     except_conditions = [
         extcal(),
         # roman(),
-        cmd("textcolor")
+        cmd('textcolor'),
+        cmd('operatorname'),
     ]
     return all([
         vim.eval('vimtex#syntax#in_mathzone()') == '1',
@@ -18,7 +19,7 @@ def math():
 def pure_math():
     extra_conditions = [
         not_chem(),
-        not_unit()
+        not_unit(),
     ]
     return all([
         math(),
@@ -26,10 +27,7 @@ def pure_math():
     ])
 
 def extcal():
-    for environment in external_environments:
-        if env(environment):
-            return True
-    return False
+    return any([env(environment) for environment in external_environments])
 
 # 行内公式模式 Inline Math Mode
 def inline_math() -> bool:
